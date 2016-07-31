@@ -19,12 +19,17 @@ module "k8s" {
   # K8s specific
   apiserver_count  = "${var.apiserver_count}"
   apiserver_size   = "${var.apiserver_size}"
-  kubelet_count    = "$var.kubelet_count}"
+  kubelet_count    = "${var.kubelet_count}"
   kubelet_size     = "${var.kubelet_size}"
   service_ip_range = "${var.service_ip_range}"
   k8s_service_ip   = "${var.k8s_service_ip}"
   dns_service_ip   = "${var.dns_service_ip}"
   etcd_server_urls = "${module.etcd.server_urls}"
+
+  # Load balancer
+  lb_image = "${var.lb_image}"
+  lb_count = "${var.lb_count}"
+  lb_size  = "${var.lb_size}"
 }
 
 resource null_resource "flannel" {
