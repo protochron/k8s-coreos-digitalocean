@@ -1,7 +1,6 @@
-# Common
 variable region {
-  default     = "sfo1"
   description = "Region to launch in"
+  default     = "sfo1"
 }
 
 variable ssh_keys {
@@ -12,22 +11,10 @@ variable image {
   description = "Name of the image to use"
 }
 
-# Etcd
-variable etcd_count {
-  description = "Number of etcd droplets"
-  default     = 1
+variable etcd_server_urls {
+  description = "Comma-separated list of etcd urls"
 }
 
-variable discovery_url {
-  description = "etcd discovery url"
-}
-
-variable etcd_size {
-  description = "Size of the etcd droplet"
-  default     = "1gb"
-}
-
-# K8s
 variable kubelet_count {
   description = "Number of kubelets to use"
   default     = 1
@@ -48,11 +35,6 @@ variable apiserver_count {
   default     = 1
 }
 
-variable pod_network {
-  description = "CIDR of pod IPs"
-  default     = "10.2.0.0/16"
-}
-
 variable service_ip_range {
   description = "CIDR for service IPs"
   default     = "10.3.0.0/16"
@@ -66,8 +48,4 @@ variable k8s_service_ip {
 variable dns_service_ip {
   description = "DNS service VIP"
   default     = "10.3.0.10"
-}
-
-variable vxlan_id {
-  description = "Vxlan id of the flannel network"
 }
