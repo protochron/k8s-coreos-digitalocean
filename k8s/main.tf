@@ -5,7 +5,7 @@ resource template_file "apiserver" {
     etcd_servers     = "${var.etcd_server_urls}"
     dns_service_ip   = "${var.dns_service_ip}"
     service_ip_range = "${var.service_ip_range}"
-    k8s_version      = "v1.3.3"
+    k8s_version      = "v1.3.4"
   }
 }
 
@@ -16,9 +16,11 @@ resource template_file "kubelet" {
     etcd_servers     = "${var.etcd_server_urls}"
     dns_service_ip   = "${var.dns_service_ip}"
     service_ip_range = "${var.service_ip_range}"
-    master           = "${digitalocean_droplet.lb.ipv4_address}"
-    k8s_version      = "v1.3.3"
-    apiservers       = "${join(",", formatlist("http://%s:8080", digitalocean_droplet.apiserver.*.ipv4_address_private))}"
+
+    #master           = "${digitalocean_droplet.lb.ipv4_address}"
+    master      = "http://${digitalocean_droplet.apiserver.ipv4_address_private}:8080"
+    k8s_version = "v1.3.4"
+    apiservers  = "${join(",", formatlist("http://%s:8080", digitalocean_droplet.apiserver.*.ipv4_address_private))}"
   }
 }
 
