@@ -1,4 +1,4 @@
-resource template_file "apiserver" {
+data "template_file" "apiserver" {
   template = "${file("${path.module}/templates/apiserver.tpl")}"
 
   vars {
@@ -9,7 +9,7 @@ resource template_file "apiserver" {
   }
 }
 
-resource template_file "kubelet" {
+data "template_file" "kubelet" {
   template = "${file("${path.module}/templates/kubelet.tpl")}"
 
   vars {
@@ -33,7 +33,7 @@ resource digitalocean_droplet "apiserver" {
   ssh_keys           = ["${var.ssh_keys}"]
   private_networking = true
 
-  user_data = "${template_file.apiserver.rendered}"
+  user_data = "${data.template_file.apiserver.rendered}"
 }
 
 resource digitalocean_droplet "kubelet" {
@@ -45,7 +45,7 @@ resource digitalocean_droplet "kubelet" {
   ssh_keys           = ["${var.ssh_keys}"]
   private_networking = true
 
-  user_data = "${template_file.kubelet.rendered}"
+  user_data = "${data.template_file.kubelet.rendered}"
 }
 
 resource digitalocean_droplet "lb" {

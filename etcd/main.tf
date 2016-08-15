@@ -1,4 +1,4 @@
-resource template_file "etcd" {
+data template_file "etcd" {
   template = "${file("${path.module}/templates/etcd.tpl")}"
 
   vars {
@@ -15,5 +15,5 @@ resource digitalocean_droplet "etcd" {
   ssh_keys           = ["${var.ssh_keys}"]
   private_networking = true
 
-  user_data = "${template_file.etcd.rendered}"
+  user_data = "${data.template_file.etcd.rendered}"
 }
