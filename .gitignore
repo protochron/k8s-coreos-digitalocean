@@ -1,3 +1,4 @@
 *.tfvars
 *.tfstate.backup
 *.tfstate
+.envrc
