@@ -8,13 +8,15 @@ module "etcd" {
   discovery_url = "${var.discovery_url}"
   pod_network   = "${var.pod_network}"
   vxlan_id      = "${var.vxlan_id}"
+  do_read_token = "${var.do_read_token}"
 }
 
 module "k8s" {
-  source   = "./k8s"
-  image    = "${var.image}"
-  region   = "${var.region}"
-  ssh_keys = "${var.ssh_keys}"
+  source        = "./k8s"
+  image         = "${var.image}"
+  region        = "${var.region}"
+  ssh_keys      = "${var.ssh_keys}"
+  do_read_token = "${var.do_read_token}"
 
   # K8s specific
   apiserver_count  = "${var.apiserver_count}"

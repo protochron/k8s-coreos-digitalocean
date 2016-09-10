@@ -6,6 +6,7 @@ data "template_file" "apiserver" {
     dns_service_ip   = "${var.dns_service_ip}"
     service_ip_range = "${var.service_ip_range}"
     k8s_version      = "v${var.kubernetes_version}"
+    key              = "${var.do_read_token}"
   }
 }
 
@@ -21,6 +22,7 @@ data "template_file" "kubelet" {
     master      = "http://${digitalocean_droplet.apiserver.ipv4_address_private}:8080"
     k8s_version = "v${var.kubernetes_version}"
     apiservers  = "${join(",", formatlist("http://%s:8080", digitalocean_droplet.apiserver.*.ipv4_address_private))}"
+    key         = "${var.do_read_token}"
   }
 }
 

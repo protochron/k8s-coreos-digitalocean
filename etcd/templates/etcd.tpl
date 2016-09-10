@@ -10,7 +10,28 @@ coreos:
   units:
     - name: etcd2.service
       command: start
+    - name: docker.service
+      drop-ins:
+        - name: "60-docker-config.conf"
+          content: |
+            [Service]
+            Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
+    - name: droplan.service
+      command: start
+      content: |
+        [Unit]
+        Description=updates iptables with peer droplets
+        Requires=docker.service
 
-    #- name: iptables-restore.service
-    #  enable: true
-    #  command: start
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
+    - name: droplan.timer
+      command: start
+      content: |
+        [Unit]
+        Description=Run droplan.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5

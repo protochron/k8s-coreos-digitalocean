@@ -12,6 +12,10 @@ variable image {
   description = "Name of the image to use"
 }
 
+variable do_read_token {
+  description = "Read-only token for the DO api"
+}
+
 # Etcd
 variable etcd_count {
   description = "Number of etcd droplets"

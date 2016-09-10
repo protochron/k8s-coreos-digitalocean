@@ -11,6 +11,10 @@ variable image {
   description = "Name of the image to use"
 }
 
+variable do_read_token {
+  description = "Read-only DO token"
+}
+
 variable etcd_server_urls {
   description = "Comma-separated list of etcd urls"
 }

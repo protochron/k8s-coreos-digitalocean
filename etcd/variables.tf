@@ -8,6 +8,10 @@ variable region {
   default     = "sfo1"
 }
 
+variable do_read_token {
+  description = "A read-only token for configuring droplan"
+}
+
 variable discovery_url {
   description = "etcd discovery url"
 }

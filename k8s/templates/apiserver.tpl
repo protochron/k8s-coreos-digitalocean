@@ -159,6 +159,25 @@ coreos:
   flannel:
     etcd_endpoints: ${etcd_servers}
   units:
+    - name: droplan.service
+      command: start
+      content: |
+        [Unit]
+        Description=updates iptables with peer droplets
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
+    - name: droplan.timer
+      command: start
+      content: |
+        [Unit]
+        Description=Run droplan.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5
     - name: "flanneld.service"
       drop-ins:
         - name: "40-ExecStartPre-symlink.conf"
@@ -176,7 +195,7 @@ coreos:
         - name: "60-docker-config.conf"
           content: |
             [Service]
-            Environment=DOCKER_OPTS='--storage-driver=overlay'
+            Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
       command: start
     - name: "kubelet.service"
       command: start

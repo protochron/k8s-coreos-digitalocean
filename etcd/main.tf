@@ -3,6 +3,7 @@ data template_file "etcd" {
 
   vars {
     discovery_url = "${var.discovery_url}"
+    key           = "${var.do_read_token}"
   }
 }
 

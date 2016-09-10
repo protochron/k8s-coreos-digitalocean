@@ -70,7 +70,7 @@ coreos:
         - name: "60-docker-config.conf"
           content: |
             [Service]
-            Environment=DOCKER_OPTS='--storage-driver=overlay'
+            Environment="DOCKER_OPTS=--storage-driver=overlay"
       command: start
     - name: "kubelet.service"
       command: start
