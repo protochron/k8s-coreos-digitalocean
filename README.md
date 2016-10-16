@@ -1,6 +1,6 @@
-# k8s-digitalocean-coreos This repo contains a few
-[Terraform](https://www.terraform.io/) modules that should let you spin up a
-production-ready Kubernetes cluster on DigitalOcean.
+# k8s-digitalocean-coreos
+This repo contains a few [Terraform](https://www.terraform.io/) modules that
+should let you spin up a production-ready Kubernetes cluster on DigitalOcean.
 
 ## Requirements
 * terraform
@@ -28,7 +28,9 @@ discovery API. This will let your etcd cluster quickly bootstrap by using the
 token.
 
 ### `secrets.tfvars`
-You will also need to provide a DigitalOcean API token with write access to your account along with a ssh key id or fingerprint that has bee nset u in your account.
+You will also need to provide a DigitalOcean API token with write access to
+your account along with a ssh key id or fingerprint that has bee nset u in your
+account.
 
 You should create a `secrets.tfvars` file with the following content replacing the values as necessary:
 
