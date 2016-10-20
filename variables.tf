@@ -24,6 +24,7 @@ variable etcd_count {
 
 variable discovery_url {
   description = "etcd discovery url"
+  default = "https://discovery.etcd.io/cedd96b8d0e1a1f8dd8a196534e8ae69"
 }
 
 variable etcd_size {

@@ -1,6 +1,6 @@
 data template_file "etcd" {
   template = "${file("${path.module}/templates/etcd.tpl")}"
-
+  
   vars {
     discovery_url = "${var.discovery_url}"
     key           = "${var.do_read_token}"
