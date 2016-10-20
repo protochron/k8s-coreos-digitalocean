@@ -95,3 +95,8 @@ variable lb_count {
 variable lb_size {
   description = "Size of the lb droplet"
 }
+
+variable resource_prefix {
+  description = "a prefix for each resource name"
+  default = ""
+}

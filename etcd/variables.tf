@@ -45,3 +45,8 @@ variable pod_network {
   description = "CIDR of pod IPs"
   default     = "10.2.0.0/16"
 }
+
+variable resource_prefix {
+  description = "a prefix for each resource name"
+  default = ""
+}
