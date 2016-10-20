@@ -24,16 +24,12 @@ write_files:
           - /hyperkube
           - proxy
           - --master=${master}
-          - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
           - --proxy-mode=iptables
           securityContext:
             privileged: true
           volumeMounts:
             - mountPath: /etc/ssl/certs
               name: "ssl-certs"
-            - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
-              name: "kubeconfig"
-              readOnly: true
             - mountPath: /etc/kubernetes/ssl
               name: "etc-kube-ssl"
               readOnly: true
@@ -41,9 +37,6 @@ write_files:
           - name: "ssl-certs"
             hostPath:
               path: "/usr/share/ca-certificates"
-          - name: "kubeconfig"
-            hostPath:
-              path: "/etc/kubernetes/worker-kubeconfig.yaml"
           - name: "etc-kube-ssl"
             hostPath:
               path: "/etc/kubernetes/ssl"
@@ -85,7 +78,6 @@ coreos:
         --register-node=true \
         --allow-privileged=true \
         --config=/etc/kubernetes/manifests \
-        --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
         --hostname-override=$private_ipv4 \
         --cluster-dns=${dns_service_ip} \
         --cluster-domain=cluster.local

@@ -23,17 +23,14 @@ write_files:
             command:
             - /hyperkube
             - apiserver
-            - --bind-address=0.0.0.0
             - --etcd-servers=${etcd_servers}
             - --allow-privileged=true
+            - --bind-address=0.0.0.0
+            - --insecure-bind-address=0.0.0.0
             - --service-cluster-ip-range=${service_ip_range}
             - --secure-port=443
             - --advertise-address=$private_ipv4
             - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
-            #- --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
-            #- - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-            #- - --client-ca-file=/etc/kubernetes/ssl/ca.pem
-            #- - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
             - --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true
             ports:
             - containerPort: 443
