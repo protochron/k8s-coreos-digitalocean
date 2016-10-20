@@ -12,8 +12,9 @@ resource digitalocean_droplet "etcd" {
   image              = "${var.image}"
   region             = "${var.region}"
   size               = "${var.size}"
-  name               = "${format("etcd-%02d", count.index + 1)}"
+  name               = "${format("etcd-%02d-%s", count.index + 1, var.cluster_id)}"
   ssh_keys           = ["${var.ssh_keys}"]
+  tags               = ["${var.cluster_tag}"]
   private_networking = true
 
   user_data = "${data.template_file.etcd.rendered}"

@@ -7,6 +7,14 @@ variable ssh_keys {
   description = "SSH keys to use"
 }
 
+variable cluster_id {
+  description = "A unique id for the cluster"
+}
+
+variable cluster_tag {
+  description = "A unique tag for the cluster"
+}
+
 variable image {
   description = "Name of the image to use"
 }

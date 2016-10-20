@@ -8,6 +8,14 @@ variable region {
   default     = "sfo1"
 }
 
+variable cluster_id {
+  description = "A unique id for the cluster"
+}
+
+variable cluster_tag {
+  description = "A unique tag for the cluster"
+}
+
 variable do_read_token {
   description = "A read-only token for configuring droplan"
 }

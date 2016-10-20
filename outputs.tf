@@ -9,3 +9,7 @@ output "apiservers" {
 output "load-balancer" {
   value = "${module.k8s.load-balancer}"
 }
+
+output "cluster-tag" {
+  value = "${digitalocean_tag.cluster_tag.id}"
+}
