@@ -39,8 +39,8 @@ token.
 
 ### `secrets.tfvars`
 You will also need to provide a DigitalOcean API token with write access to
-your account along with a ssh key id or fingerprint that has been added to your
-account.
+your account along with a comma separated list of ssh key ids or fingerprints
+associated with your account.
 
 You should create a `secrets.tfvars` file with the following content replacing the values as necessary:
 

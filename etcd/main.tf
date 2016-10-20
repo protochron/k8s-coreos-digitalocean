@@ -13,7 +13,7 @@ resource digitalocean_droplet "etcd" {
   region             = "${var.region}"
   size               = "${var.size}"
   name               = "${format("etcd-%02d-%s", count.index + 1, var.cluster_id)}"
-  ssh_keys           = ["${var.ssh_keys}"]
+  ssh_keys           = ["${split(",", var.ssh_keys)}"]
   tags               = ["${var.cluster_tag}"]
   private_networking = true
 
