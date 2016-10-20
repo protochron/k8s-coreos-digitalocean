@@ -10,10 +10,19 @@ should let you spin up a production-ready Kubernetes cluster on DigitalOcean.
   [DropLan](https://github.com/tam7t/droplan))
 
 ## Getting Started
-### `config.tfvars`
+
 Once you have your API keys handy, it's just a matter of setting up the shared
 configuration that the modules use.
 
+To prevent repeated requests for DO access token set your digital ocean api key
+as an environment variable:
+```
+export DIGITALOCEAN_ACCESS_TOKEN="INSERT_TOKEN_HERE"
+export DIGITALOCEAN_TOKEN=$DIGITALOCEAN_ACCESS_TOKEN
+```
+(We recommend using [direnv](https://github.com/direnv/direnv) and an .envrc file to make this easier.)
+
+### `config.tfvars`
 Copy the `config.tfvars.template` file to `config.tfvars`. Set the value of the
 `do_read_token` variable to a read-only DigitalOcean token for your account.
 
@@ -38,6 +47,10 @@ You should create a `secrets.tfvars` file with the following content replacing t
 ```
 ssh_keys = "YOUR_SSH_KEYS"
 do_token = "DO_API_WRITE_TOKEN"
+```
+## Get the terraform modules
+```
+terraform get
 ```
 
 ## Create your etcd cluster
