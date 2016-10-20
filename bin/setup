@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+cp config.tfvars.template config.tfvars
+
+discovery_url=$(curl -s -w "\n" 'https://discovery.etcd.io/new?size=3')
+
+sed -i'.bak' -e "s|DISCOVERY_URL|$discovery_url|" config.tfvars
+
+rm config.tfvars.bak
+
+echo "Config file ready! Update DO_READ_TOKEN!!!"
