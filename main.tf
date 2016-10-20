@@ -1,3 +1,11 @@
+resource random_id "cluster_id" {
+  byte_length = 16
+}
+
+resource digitalocean_tag "cluster_tag" {
+  name = "${format("k8s_cluster:%s", random_id.cluster_id.hex)}"
+}
+
 module "etcd" {
   source        = "./etcd"
   size          = "${var.etcd_size}"
@@ -9,6 +17,8 @@ module "etcd" {
   pod_network   = "${var.pod_network}"
   vxlan_id      = "${var.vxlan_id}"
   do_read_token = "${var.do_read_token}"
+  cluster_id    = "${random_id.cluster_id.hex}"
+  cluster_tag   = "${digitalocean_tag.cluster_tag.id}"
 }
 
 module "k8s" {
@@ -17,17 +27,19 @@ module "k8s" {
   region        = "${var.region}"
   ssh_keys      = "${var.ssh_keys}"
   do_read_token = "${var.do_read_token}"
-  kubernetes_version = "${var.kubernetes_version}"
+  cluster_id    = "${random_id.cluster_id.hex}"
+  cluster_tag   = "${digitalocean_tag.cluster_tag.id}"
 
   # K8s specific
-  apiserver_count  = "${var.apiserver_count}"
-  apiserver_size   = "${var.apiserver_size}"
-  kubelet_count    = "${var.kubelet_count}"
-  kubelet_size     = "${var.kubelet_size}"
-  service_ip_range = "${var.service_ip_range}"
-  k8s_service_ip   = "${var.k8s_service_ip}"
-  dns_service_ip   = "${var.dns_service_ip}"
-  etcd_server_urls = "${module.etcd.server_urls}"
+  kubernetes_version = "${var.kubernetes_version}"
+  apiserver_count    = "${var.apiserver_count}"
+  apiserver_size     = "${var.apiserver_size}"
+  kubelet_count      = "${var.kubelet_count}"
+  kubelet_size       = "${var.kubelet_size}"
+  service_ip_range   = "${var.service_ip_range}"
+  k8s_service_ip     = "${var.k8s_service_ip}"
+  dns_service_ip     = "${var.dns_service_ip}"
+  etcd_server_urls   = "${module.etcd.server_urls}"
 
   # Load balancer
   lb_image = "${var.lb_image}"
