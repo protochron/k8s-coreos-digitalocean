@@ -17,6 +17,7 @@ module "k8s" {
   region        = "${var.region}"
   ssh_keys      = "${var.ssh_keys}"
   do_read_token = "${var.do_read_token}"
+  kubernetes_version = "${var.kubernetes_version}"
 
   # K8s specific
   apiserver_count  = "${var.apiserver_count}"
