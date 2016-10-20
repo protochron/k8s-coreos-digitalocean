@@ -6,7 +6,8 @@ should let you spin up a production-ready Kubernetes cluster on DigitalOcean.
 * terraform
 * A DigitalOcean API key with write access (directions
   [here](https://www.digitalocean.com/community/tutorials/how-to-use-the-digitalocean-api-v2))
-* A DigitalOcean API key with read-only access (used for DropLan)
+* A DigitalOcean API key with read-only access (used for
+  [DropLan](https://github.com/tam7t/droplan))
 
 ## Getting Started
 ### `config.tfvars`
@@ -29,7 +30,7 @@ token.
 
 ### `secrets.tfvars`
 You will also need to provide a DigitalOcean API token with write access to
-your account along with a ssh key id or fingerprint that has bee nset u in your
+your account along with a ssh key id or fingerprint that has been added to your
 account.
 
 You should create a `secrets.tfvars` file with the following content replacing the values as necessary:
