@@ -6,6 +6,10 @@ output "apiservers" {
   value = "${module.k8s.apiservers}"
 }
 
+output "kubelets" {
+  value = "${module.k8s.kubelets}"
+}
+
 output "load-balancer" {
   value = "${module.k8s.load-balancer}"
 }
