@@ -31,7 +31,7 @@ resource digitalocean_droplet "apiserver" {
   image              = "${var.image}"
   region             = "${var.region}"
   size               = "${var.apiserver_size}"
-  name               = "${format("apiserver-%02d-%s", count.index + 1, var.cluster_id)}"
+  name               = "${format("%sapiserver-%02d-%s", var.resource_prefix, count.index + 1, var.cluster_id)}"
   ssh_keys           = ["${split(",", var.ssh_keys)}"]
   tags               = ["${var.cluster_tag}"]
   private_networking = true
@@ -44,7 +44,7 @@ resource digitalocean_droplet "kubelet" {
   image              = "${var.image}"
   region             = "${var.region}"
   size               = "${var.kubelet_size}"
-  name               = "${format("kubelet-%02d-%s", count.index + 1, var.cluster_id)}"
+  name               = "${format("%skubelet-%02d-%s", var.resource_prefix, count.index + 1, var.cluster_id)}"
   ssh_keys           = ["${split(",", var.ssh_keys)}"]
   tags               = ["${var.cluster_tag}"]
   private_networking = true
@@ -57,7 +57,7 @@ resource digitalocean_droplet "lb" {
   image              = "${var.lb_image}"
   size               = "${var.lb_size}"
   region             = "${var.region}"
-  name               = "${format("lb-%02d-%s", count.index + 1, var.cluster_id)}"
+  name               = "${format("%slb-%02d-%s", var.resource_prefix, count.index + 1, var.cluster_id)}"
   ssh_keys           = ["${split(",", var.ssh_keys)}"]
   tags               = ["${var.cluster_tag}"]
   private_networking = true

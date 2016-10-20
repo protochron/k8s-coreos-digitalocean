@@ -7,18 +7,19 @@ resource digitalocean_tag "cluster_tag" {
 }
 
 module "etcd" {
-  source        = "./etcd"
-  size          = "${var.etcd_size}"
-  image         = "${var.image}"
-  region        = "${var.region}"
-  ssh_keys      = "${var.ssh_keys}"
-  count         = "${var.etcd_count}"
-  discovery_url = "${var.discovery_url}"
-  pod_network   = "${var.pod_network}"
-  vxlan_id      = "${var.vxlan_id}"
-  do_read_token = "${var.do_read_token}"
-  cluster_id    = "${random_id.cluster_id.hex}"
-  cluster_tag   = "${digitalocean_tag.cluster_tag.id}"
+  source          = "./etcd"
+  size            = "${var.etcd_size}"
+  image           = "${var.image}"
+  region          = "${var.region}"
+  ssh_keys        = "${var.ssh_keys}"
+  count           = "${var.etcd_count}"
+  discovery_url   = "${var.discovery_url}"
+  pod_network     = "${var.pod_network}"
+  vxlan_id        = "${var.vxlan_id}"
+  do_read_token   = "${var.do_read_token}"
+  resource_prefix = "${var.resource_prefix}"
+  cluster_id      = "${random_id.cluster_id.hex}"
+  cluster_tag     = "${digitalocean_tag.cluster_tag.id}"
 }
 
 module "k8s" {
@@ -39,6 +40,7 @@ module "k8s" {
   service_ip_range   = "${var.service_ip_range}"
   k8s_service_ip     = "${var.k8s_service_ip}"
   dns_service_ip     = "${var.dns_service_ip}"
+  resource_prefix    = "${var.resource_prefix}"
   etcd_server_urls   = "${module.etcd.server_urls}"
 
   # Load balancer

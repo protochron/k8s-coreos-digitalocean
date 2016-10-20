@@ -25,6 +25,10 @@ export DIGITALOCEAN_TOKEN=$DIGITALOCEAN_ACCESS_TOKEN
 ### `config.tfvars`
 Copy the `config.tfvars.template` file to `config.tfvars`. Set the value of the
 `do_read_token` variable to a read-only DigitalOcean token for your account.
+Your terraform'd resources will automatically be assigned tags but if you or
+your team need greater visibility into clusters we provide a `resource_prefix`
+configuration variable that will prepend its value to every created resource
+name.
 
 Next, you'll need to get an etcd discovery token
 
@@ -48,6 +52,7 @@ You should create a `secrets.tfvars` file with the following content replacing t
 ssh_keys = "YOUR_SSH_KEYS"
 do_token = "DO_API_WRITE_TOKEN"
 ```
+
 ## Get the terraform modules
 ```
 terraform get
