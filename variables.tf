@@ -44,7 +44,7 @@ variable kubelet_size {
 
 variable kubernetes_version {
   description = "Version of Kubernetes to install"
-  default     = "1.3.6"
+  default     = "1.4.3"
 }
 
 variable apiserver_size {
