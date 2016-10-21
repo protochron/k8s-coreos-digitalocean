@@ -48,7 +48,7 @@ write_files:
             - --service-cluster-ip-range=${service_ip_range}
             - --secure-port=8443
             - --advertise-address=$private_ipv4
-            - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
+            - --admission-control=NamespaceLifecycle,ServiceAccount,LimitRanger,DefaultStorageClass,ResourceQuota
             - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
             - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
             - --client-ca-file=/etc/kubernetes/ssl/ca.pem
@@ -170,7 +170,37 @@ write_files:
               port: 10251
             initialDelaySeconds: 15
             timeoutSeconds: 1
-  - path: "/etc/kubernetes/manifests/kube-dns.yaml"
+  - path: "/etc/kubernetes/manifests/addons.yaml"
+    owner: root
+    permissions: 0644
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-addon-manager
+        namespace: kube-system
+        labels:
+          component: kube-addon-manager
+          version: v4
+      spec:
+        hostNetwork: true
+        containers:
+        - name: kube-addon-manager
+          # When updating version also bump it in cluster/images/hyperkube/static-pods/addon-manager.json
+          image: gcr.io/google-containers/kube-addon-manager:v5.1
+          resources:
+            requests:
+              cpu: 5m
+              memory: 50Mi
+          volumeMounts:
+          - mountPath: /etc/kubernetes/
+            name: addons
+            readOnly: true
+        volumes:
+        - hostPath:
+            path: /etc/kubernetes/
+          name: addons
+  - path: "/etc/kubernetes/addons/kube-dns/kube-dns-svc.yaml"
     owner: root
     permissions: 0644
     content: |
@@ -194,11 +224,10 @@ write_files:
         - name: dns-tcp
           port: 53
           protocol: TCP
-
-
-      ---
-
-
+  - path: "/etc/kubernetes/addons/kube-dns/kube-dns-rc.yaml"
+    owner: root
+    permissions: 0644
+    content: |
       apiVersion: v1
       kind: ReplicationController
       metadata:
