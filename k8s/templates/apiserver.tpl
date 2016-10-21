@@ -156,6 +156,20 @@ coreos:
   flannel:
     etcd_endpoints: ${etcd_servers}
   units:
+    - name: install-kubectl.service
+      command: start
+      content: |
+        [Unit]
+        After=network-online.target
+        Description=Installs kubectl Binary
+        Requires=network-online.target
+
+        [Service]
+        Type=oneshot
+        ExecStartPre=/bin/mkdir -p /opt/bin
+        ExecStart=/usr/bin/curl -sL -o /opt/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${k8s_version}/bin/linux/amd64/kubectl
+        ExecStartPost=/usr/bin/chmod a+x /opt/bin/kubectl
+        RemainAfterExit=yes
     - name: droplan.service
       command: start
       content: |
