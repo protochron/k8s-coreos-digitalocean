@@ -30,8 +30,9 @@ write_files:
             - --service-cluster-ip-range=${service_ip_range}
             - --secure-port=443
             - --advertise-address=$private_ipv4
-            - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
+            - --admission-control=NamespaceLifecycle,ServiceAccount,LimitRanger,DefaultStorageClass,ResourceQuota
             - --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true
+            - --service-account-key-file=/etc/kubernetes/ssl/service_account.key
             ports:
             - containerPort: 443
               hostPort: 443
@@ -48,10 +49,10 @@ write_files:
               readOnly: true
         volumes:
         - hostPath:
-          path: /etc/kubernetes/ssl
+            path: /etc/kubernetes/ssl
           name: ssl-certs-kubernetes
         - hostPath:
-          path: /usr/share/ca-certificates
+            path: /usr/share/ca-certificates
           name: ssl-certs-host
   - path: '/etc/kubernetes/manifests/kube-proxy.yaml'
     owner: root
@@ -101,6 +102,7 @@ write_files:
           - controller-manager
           - --master=http://127.0.0.1:8080
           - --leader-elect=true
+          - --service-account-private-key-file=/etc/kubernetes/service_account.key
             #- --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
             #- --root-ca-file=/etc/kubernetes/ssl/ca.pem
           livenessProbe:
@@ -150,7 +152,37 @@ write_files:
               port: 10251
             initialDelaySeconds: 15
             timeoutSeconds: 1
-  - path: "/etc/kubernetes/manifests/kube-dns.yaml"
+  - path: "/etc/kubernetes/manifests/addons.yaml"
+    owner: root
+    permissions: 0644
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-addon-manager
+        namespace: kube-system
+        labels:
+          component: kube-addon-manager
+          version: v4
+      spec:
+        hostNetwork: true
+        containers:
+        - name: kube-addon-manager
+          # When updating version also bump it in cluster/images/hyperkube/static-pods/addon-manager.json
+          image: gcr.io/google-containers/kube-addon-manager:v5.1
+          resources:
+            requests:
+              cpu: 5m
+              memory: 50Mi
+          volumeMounts:
+          - mountPath: /etc/kubernetes/
+            name: addons
+            readOnly: true
+        volumes:
+        - hostPath:
+            path: /etc/kubernetes/
+          name: addons
+  - path: "/etc/kubernetes/addons/kube-dns/kube-dns-svc.yaml"
     owner: root
     permissions: 0644
     content: |
@@ -174,11 +206,10 @@ write_files:
         - name: dns-tcp
           port: 53
           protocol: TCP
-
-
-      ---
-
-
+  - path: "/etc/kubernetes/addons/kube-dns/kube-dns-rc.yaml"
+    owner: root
+    permissions: 0644
+    content: |
       apiVersion: v1
       kind: ReplicationController
       metadata:
@@ -298,6 +329,17 @@ coreos:
         ExecStartPre=/bin/mkdir -p /opt/bin
         ExecStart=/usr/bin/curl -sL -o /opt/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${k8s_version}/bin/linux/amd64/kubectl
         ExecStartPost=/usr/bin/chmod a+x /opt/bin/kubectl
+        RemainAfterExit=yes
+    - name: gen-service-account-key.service
+      command: start
+      content: |
+        [Unit]
+        Description=Generates a key for the default service account
+
+        [Service]
+        Type=oneshot
+        ExecStartPre=/bin/mkdir -p /etc/kubernetes
+        ExecStart=/bin/openssl genrsa -out /etc/kubernetes/service_account.key 2048
         RemainAfterExit=yes
     - name: droplan.service
       command: start
