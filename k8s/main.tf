@@ -26,6 +26,21 @@ data "template_file" "kubelet" {
   }
 }
 
+data "template_file" "edge-kubelet" {
+  template = "${file("${path.module}/templates/kubelet.tpl")}"
+
+  vars {
+    etcd_servers     = "${var.etcd_server_urls}"
+    dns_service_ip   = "${var.dns_service_ip}"
+    service_ip_range = "${var.service_ip_range}"
+
+    master      = "http://${digitalocean_droplet.apiserver.ipv4_address_private}:8080"
+    k8s_version = "v${var.kubernetes_version}"
+    apiservers  = "${join(",", formatlist("http://%s:8080", digitalocean_droplet.apiserver.*.ipv4_address_private))}"
+    key         = "${var.do_read_token}"
+  }
+}
+
 resource digitalocean_droplet "apiserver" {
   count              = "${var.apiserver_count}"
   image              = "${var.image}"
@@ -54,11 +69,13 @@ resource digitalocean_droplet "kubelet" {
 
 resource digitalocean_droplet "lb" {
   count              = "${var.lb_count}"
-  image              = "${var.lb_image}"
+  image              = "${var.image}"
   size               = "${var.lb_size}"
   region             = "${var.region}"
   name               = "${format("%slb-%02d-%s", var.resource_prefix, count.index + 1, var.cluster_id)}"
   ssh_keys           = ["${split(",", var.ssh_keys)}"]
   tags               = ["${var.cluster_tag}"]
   private_networking = true
+
+  user_data = "${data.template_file.edge-kubelet.rendered}"
 }
