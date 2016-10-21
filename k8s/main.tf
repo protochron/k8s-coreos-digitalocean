@@ -54,7 +54,7 @@ resource digitalocean_droplet "kubelet" {
 
 resource digitalocean_droplet "lb" {
   count              = "${var.lb_count}"
-  image              = "${var.lb_image}"
+  image              = "${var.image}"
   size               = "${var.lb_size}"
   region             = "${var.region}"
   name               = "${format("%slb-%02d-%s", var.resource_prefix, count.index + 1, var.cluster_id)}"

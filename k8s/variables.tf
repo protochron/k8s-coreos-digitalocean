@@ -68,11 +68,6 @@ variable dns_service_ip {
 }
 
 # Load balancer
-variable lb_image {
-  description = "Image to use for the load balancer"
-  default     = "ubuntu-16-04-x64"
-}
-
 variable lb_count {
   description = "Number of load balancers for the apiservers"
   default     = 1

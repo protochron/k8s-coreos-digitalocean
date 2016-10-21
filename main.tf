@@ -44,7 +44,6 @@ module "k8s" {
   etcd_server_urls   = "${module.etcd.server_urls}"
 
   # Load balancer
-  lb_image = "${var.lb_image}"
   lb_count = "${var.lb_count}"
   lb_size  = "${var.lb_size}"
 }
