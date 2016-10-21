@@ -6,6 +6,25 @@ write_files:
     content: |
       FLANNELD_IFACE=$private_ipv4
       FLANNELD_ETCD_ENDPOINTS=${etcd_servers}
+  - path: /var/lib/iptables/rules-save
+    permissions: 0644
+    owner: 'root:root'
+    content: |
+      *filter
+      :INPUT DROP [0:0]
+      :FORWARD DROP [0:0]
+      :OUTPUT ACCEPT [0:0]
+      -A INPUT -i lo -j ACCEPT
+      -A INPUT -i eth1 -j ACCEPT
+      -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+      -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+      -A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
+      -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+      -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      COMMIT
   - path: '/etc/kubernetes/manifests/kube-apiserver.yaml'
     owner: root
     permissions: 0644
@@ -156,6 +175,9 @@ coreos:
   flannel:
     etcd_endpoints: ${etcd_servers}
   units:
+    - name: iptables-restore.service
+      enable: true
+      command: start
     - name: install-kubectl.service
       command: start
       content: |
