@@ -34,7 +34,7 @@ variable kubelet_count {
 
 variable kubernetes_version {
   description = "Version of Kubernetes to install"
-  default     = "1.3.6"
+  default     = "1.4.3"
 }
 
 variable kubelet_size {
