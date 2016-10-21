@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
-#cluster root CA
-openssl genrsa -out ca-key.pem 2048
-openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ca.pem -subj "/CN=kube-ca"
+SCRIPT=`python -c "import os,sys; print(os.path.realpath(os.path.expanduser(sys.argv[1])))" "${BASH_SOURCE:-$0}"`
+DIR=$(dirname $(dirname $SCRIPT))
+
+mkdir -p $DIR/CA
+
+# cluster root CA
+openssl genrsa -out $DIR/CA/ca-key.pem 2048
+openssl req -x509 -new -nodes -key $DIR/CA/ca-key.pem -days 10000 -out $DIR/CA/ca.pem -subj "/CN=kube-ca"

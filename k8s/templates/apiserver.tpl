@@ -1,5 +1,43 @@
 #cloud-config
 write_files:
+  - path: '/etc/kubernetes/ssl/openssl.cnf'
+    owner: root
+    permissions: 0644
+    content: |
+      [req]
+      req_extensions = v3_req
+      distinguished_name = req_distinguished_name
+      [req_distinguished_name]
+      [ v3_req ]
+      basicConstraints = CA:FALSE
+      keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+      subjectAltName = @alt_names
+      [alt_names]
+      DNS.1 = kubernetes
+      DNS.2 = kubernetes.default
+      DNS.3 = kubernetes.default.svc
+      DNS.4 = kubernetes.default.svc.cluster.local
+      IP.1 = ${dns_service_ip}
+      IP.2 = $private_ipv4
+  - path: '/etc/kubernetes/ssl/generate_cert'
+    owner: root
+    permissions: 0644
+    content: |
+      openssl genrsa -out apiserver-key.pem 2048
+      openssl req -new -key apiserver-key.pem -out apiserver.csr -subj "/CN=kube-apiserver" -config openssl.cnf
+      openssl x509 -req -in apiserver.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out apiserver.pem -days 365 -extensions v3_req -extfile openssl.cnf
+  - path: '/etc/kubernetes/ssl/ca.pem'
+    owner: root
+    permissions: 0644
+    encoding: base64
+    content: |
+      ${ca}
+  - path: '/etc/kubernetes/ssl/ca.key'
+    owner: root
+    permissions: 0644
+    encoding: base64
+    content: |
+      ${ca_key}
   - path: '/etc/flannel/options.env'
     owner: root
     permissions: 0644
@@ -229,7 +267,17 @@ coreos:
           content: |
             [Service]
             Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
-      command: start
+      command: startfl
+    - name: "generate-certificates"
+      content: |
+        [Unit]
+        Description=Generates the apiserver certificate
+
+        [Service]
+        Type=oneshot
+        ExecStartPre=/bin/chmod +x /etc/kubernetes/ssl/generate_cert
+        WorkingDirectory=/etc/kubernetes/ssl
+        Exec=./generate_cert
     - name: "kubelet.service"
       command: start
       content: |

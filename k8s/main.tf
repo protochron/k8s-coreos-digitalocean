@@ -7,6 +7,8 @@ data "template_file" "apiserver" {
     service_ip_range = "${var.service_ip_range}"
     k8s_version      = "v${var.kubernetes_version}"
     key              = "${var.do_read_token}"
+    ca = "${base64encode(file("CA/ca.pem"))}"
+    ca_key = "${base64encode(file("CA/ca-key.pem"))}"
   }
 }
 
