@@ -1,18 +1,22 @@
 #!/bin/bash -e
 
+SCRIPT=`python -c "import os,sys; print(os.path.realpath(os.path.expanduser(sys.argv[1])))" "${BASH_SOURCE:-$0}"`
+DIR=$(dirname $(dirname $SCRIPT))
+
 echo "Grabbing terraform modules:"
 
 terraform get
 
 echo "Setting up configuration:"
 
-cp config.tfvars.template config.tfvars
+if [ -f $DIR/config.tfvars]; then
+  echo "No need to run make setup. Config file already set."
+  exit 1
+fi
 
-discovery_url=$(curl -s -w "\n" 'https://discovery.etcd.io/new?size=3')
+cp $DIR/config.tfvars.template $DIR/config.tfvars
 
-sed -i'.bak' -e "s|DISCOVERY_URL|$discovery_url|" config.tfvars
-
-rm config.tfvars.bak
+bash $DIR/bin/generate_discovery_url.sh
 
 echo "config.tfvars ready - Update DO_READ_TOKEN!!!"
 echo "Be sure to update your secrets file."
