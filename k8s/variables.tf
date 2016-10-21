@@ -80,6 +80,7 @@ variable lb_count {
 
 variable lb_size {
   description = "Size of the lb droplet"
+  dafault     = "512mb"
 }
 
 variable resource_prefix {
