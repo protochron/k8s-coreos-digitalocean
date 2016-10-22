@@ -229,7 +229,7 @@ coreos:
           content: |
             [Service]
             Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
-      command: startfl
+      command: start
     - name: "generate-certificates"
       content: |
         [Unit]
