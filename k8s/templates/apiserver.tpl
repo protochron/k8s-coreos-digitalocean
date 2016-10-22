@@ -195,6 +195,7 @@ coreos:
         ExecStartPost=/usr/bin/chmod a+x /opt/bin/kubectl
         RemainAfterExit=yes
     - name: droplan.service
+      enable: true
       command: start
       content: |
         [Unit]
@@ -243,6 +244,7 @@ coreos:
         WorkingDirectory=/etc/kubernetes/ssl
         Exec=./generate_cert
     - name: "kubelet.service"
+      enable: true
       command: start
       content: |
         [Service]
