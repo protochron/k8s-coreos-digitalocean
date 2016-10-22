@@ -93,6 +93,8 @@ write_files:
           - proxy
           - --master=http://127.0.0.1:8080
           - --proxy-mode=iptables
+          - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           securityContext:
             privileged: true
           volumeMounts:
@@ -122,8 +124,8 @@ write_files:
           - controller-manager
           - --master=http://127.0.0.1:8080
           - --leader-elect=true
-            #- --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-            #- --root-ca-file=/etc/kubernetes/ssl/ca.pem
+          - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           livenessProbe:
             httpGet:
               host: 127.0.0.1
@@ -164,6 +166,8 @@ write_files:
           - scheduler
           - --master=http://127.0.0.1:8080
           - --leader-elect=true
+          - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           livenessProbe:
             httpGet:
               host: 127.0.0.1
@@ -233,16 +237,6 @@ coreos:
             [Service]
             Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
       command: start
-    - name: "generate-certificates"
-      content: |
-        [Unit]
-        Description=Generates the apiserver certificate
-
-        [Service]
-        Type=oneshot
-        ExecStartPre=/bin/chmod +x /etc/kubernetes/ssl/generate_cert
-        WorkingDirectory=/etc/kubernetes/ssl
-        Exec=./generate_cert
     - name: "kubelet.service"
       enable: true
       command: start
