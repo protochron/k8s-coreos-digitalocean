@@ -52,6 +52,38 @@ resource digitalocean_droplet "apiserver" {
   private_networking = true
 
   user_data = "${data.template_file.apiserver.rendered}"
+
+  connection = {
+    timeout = "30s"
+    user    = "core"
+    agent   = true
+  }
+
+  provisioner "local-exec" {
+    command = "bin/generate_cert ${self.name} ${self.ipv4_address_private} ${var.dns_service_ip}"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../CA/ca.pem"
+    destination = "/home/core/ca.pem"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../ssl/${self.name}-apiserver.pem"
+    destination = "/home/core/apiserver.pem"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../ssl/${self.name}-apiserver-key.pem"
+    destination = "/home/core/apiserver-key.pem"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /etc/kubernetes/ssl",
+      "sudo mv /home/core/*.pem /etc/kubernetes/ssl/"
+    ]
+  }
 }
 
 resource digitalocean_droplet "kubelet" {
