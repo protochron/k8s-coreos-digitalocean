@@ -18,10 +18,9 @@ data "template_file" "kubelet" {
     dns_service_ip   = "${var.dns_service_ip}"
     service_ip_range = "${var.service_ip_range}"
 
-    #master           = "${digitalocean_droplet.lb.ipv4_address}"
-    master      = "http://${digitalocean_droplet.apiserver.ipv4_address_private}:8080"
+    master      = "https://${digitalocean_droplet.apiserver.ipv4_address_private}:8443"
     k8s_version = "v${var.kubernetes_version}"
-    apiservers  = "${join(",", formatlist("http://%s:8080", digitalocean_droplet.apiserver.*.ipv4_address_private))}"
+    apiservers  = "${join(",", formatlist("https://%s:8443", digitalocean_droplet.apiserver.*.ipv4_address_private))}"
     key         = "${var.do_read_token}"
   }
 }
@@ -60,7 +59,7 @@ resource digitalocean_droplet "apiserver" {
   }
 
   provisioner "local-exec" {
-    command = "bin/generate_cert ${self.name} ${self.ipv4_address_private} ${var.dns_service_ip}"
+    command = "bin/generate_apiserver_cert ${self.name} ${self.ipv4_address_private} ${var.dns_service_ip}"
   }
 
   provisioner "file" {
@@ -69,18 +68,20 @@ resource digitalocean_droplet "apiserver" {
   }
 
   provisioner "file" {
-    source = "${path.module}/../ssl/${self.name}-apiserver.pem"
+    source = "${path.module}/../ssl/${self.name}.pem"
     destination = "/home/core/apiserver.pem"
   }
 
   provisioner "file" {
-    source = "${path.module}/../ssl/${self.name}-apiserver-key.pem"
+    source = "${path.module}/../ssl/${self.name}-key.pem"
     destination = "/home/core/apiserver-key.pem"
   }
 
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /etc/kubernetes/ssl",
+      "sudo cp /home/core/ca.pem /etc/ssl/certs/${var.cluster_tag}.pem",
+      "sudo update-ca-certificates",
       "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
       "sudo chown root:root /etc/kubernetes/ssl/*.pem",
       "sudo chmod 600 /etc/kubernetes/ssl/*.pem"
@@ -99,6 +100,42 @@ resource digitalocean_droplet "kubelet" {
   private_networking = true
 
   user_data = "${data.template_file.kubelet.rendered}"
+
+  connection = {
+    timeout = "30s"
+    user    = "core"
+    agent   = true
+  }
+
+  provisioner "local-exec" {
+    command = "bin/generate_worker_cert ${self.name} ${self.ipv4_address_private}"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../CA/ca.pem"
+    destination = "/home/core/ca.pem"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../ssl/${self.name}.pem"
+    destination = "/home/core/worker.pem"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../ssl/${self.name}-key.pem"
+    destination = "/home/core/worker-key.pem"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /etc/kubernetes/ssl",
+      "sudo cp /home/core/ca.pem /etc/ssl/certs/${var.cluster_tag}.pem",
+      "sudo update-ca-certificates",
+      "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
+      "sudo chown root:root /etc/kubernetes/ssl/*.pem",
+      "sudo chmod 600 /etc/kubernetes/ssl/*.pem"
+    ]
+  }
 }
 
 resource digitalocean_droplet "lb" {
@@ -111,5 +148,41 @@ resource digitalocean_droplet "lb" {
   tags               = ["${var.cluster_tag}"]
   private_networking = true
 
-  user_data = "${data.template_file.edge-kubelet.rendered}"
+  user_data = "${data.template_file.kubelet.rendered}"
+
+  connection = {
+    timeout = "30s"
+    user    = "core"
+    agent   = true
+  }
+
+  provisioner "local-exec" {
+    command = "bin/generate_worker_cert ${self.name} ${self.ipv4_address_private}"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../CA/ca.pem"
+    destination = "/home/core/ca.pem"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../ssl/${self.name}.pem"
+    destination = "/home/core/worker.pem"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/../ssl/${self.name}-key.pem"
+    destination = "/home/core/worker-key.pem"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /etc/kubernetes/ssl",
+      "sudo cp /home/core/ca.pem /etc/ssl/certs/${var.cluster_tag}.pem",
+      "sudo update-ca-certificates",
+      "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
+      "sudo chown root:root /etc/kubernetes/ssl/*.pem",
+      "sudo chmod 600 /etc/kubernetes/ssl/*.pem"
+    ]
+  }
 }

@@ -1,0 +1,27 @@
+#!/bin/bash -e
+
+SCRIPT=`python -c "import os,sys; print(os.path.realpath(os.path.expanduser(sys.argv[1])))" "${BASH_SOURCE:-$0}"`
+DIR=$(dirname $(dirname $SCRIPT))
+
+NODE_NAME="$1"
+IP_ADDR="$2"
+
+tmpfile=$(mktemp)
+cat <<EOF > $tmpfile
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+[alt_names]
+IP.1 = ${IP_ADDR}
+EOF
+
+mkdir -p $DIR/ssl
+
+openssl genrsa -out $DIR/ssl/$NODE_NAME-key.pem 2048
+openssl req -new -key $DIR/ssl/$NODE_NAME-key.pem -out $DIR/ssl/$NODE_NAME.csr -subj "/CN=${NODE_NAME}" -config $tmpfile
+openssl x509 -req -in $DIR/ssl/$NODE_NAME.csr -CA $DIR/CA/ca.pem -CAkey $DIR/CA/ca-key.pem -CAcreateserial -out $DIR/ssl/$NODE_NAME.pem -days 365 -extensions v3_req -extfile $tmpfile

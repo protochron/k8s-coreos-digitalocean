@@ -28,6 +28,6 @@ EOF
 
 mkdir -p $DIR/ssl
 
-openssl genrsa -out $DIR/ssl/$NODE_NAME-apiserver-key.pem 2048
-openssl req -new -key $DIR/ssl/$NODE_NAME-apiserver-key.pem -out $DIR/ssl/$NODE_NAME-apiserver.csr -subj "/CN=kube-apiserver" -config $tmpfile
-openssl x509 -req -in $DIR/ssl/$NODE_NAME-apiserver.csr -CA $DIR/CA/ca.pem -CAkey $DIR/CA/ca-key.pem -CAcreateserial -out $DIR/ssl/$NODE_NAME-apiserver.pem -days 365 -extensions v3_req -extfile $tmpfile
+openssl genrsa -out $DIR/ssl/$NODE_NAME-key.pem 2048
+openssl req -new -key $DIR/ssl/$NODE_NAME-key.pem -out $DIR/ssl/$NODE_NAME.csr -subj "/CN=kube-apiserver" -config $tmpfile
+openssl x509 -req -in $DIR/ssl/$NODE_NAME.csr -CA $DIR/CA/ca.pem -CAkey $DIR/CA/ca-key.pem -CAcreateserial -out $DIR/ssl/$NODE_NAME.pem -days 365 -extensions v3_req -extfile $tmpfile

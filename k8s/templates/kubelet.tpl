@@ -102,7 +102,9 @@ coreos:
         --config=/etc/kubernetes/manifests \
         --hostname-override=$private_ipv4 \
         --cluster-dns=${dns_service_ip} \
-        --cluster-domain=cluster.local
+        --cluster-domain=cluster.local \
+        --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+        --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
         Restart=always
         RestartSec=10
         [Install]
