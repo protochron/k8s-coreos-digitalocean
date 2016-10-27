@@ -46,7 +46,7 @@ write_files:
             - --allow-privileged=true
             - --bind-address=0.0.0.0
             - --service-cluster-ip-range=${service_ip_range}
-            - --secure-port=443
+            - --secure-port=8443
             - --advertise-address=$private_ipv4
             - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
             - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
@@ -69,10 +69,10 @@ write_files:
               readOnly: true
         volumes:
         - hostPath:
-          path: /etc/kubernetes/ssl
+            path: /etc/kubernetes/ssl
           name: ssl-certs-kubernetes
         - hostPath:
-          path: /usr/share/ca-certificates
+            path: /usr/share/ca-certificates
           name: ssl-certs-host
   - path: '/etc/kubernetes/manifests/kube-proxy.yaml'
     owner: root
@@ -93,8 +93,6 @@ write_files:
           - proxy
           - --master=http://127.0.0.1:8080
           - --proxy-mode=iptables
-          - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           securityContext:
             privileged: true
           volumeMounts:
@@ -125,7 +123,6 @@ write_files:
           - --master=http://127.0.0.1:8080
           - --leader-elect=true
           - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           livenessProbe:
             httpGet:
               host: 127.0.0.1
@@ -166,8 +163,6 @@ write_files:
           - scheduler
           - --master=http://127.0.0.1:8080
           - --leader-elect=true
-          - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           livenessProbe:
             httpGet:
               host: 127.0.0.1

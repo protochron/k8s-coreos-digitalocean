@@ -81,7 +81,9 @@ resource digitalocean_droplet "apiserver" {
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /etc/kubernetes/ssl",
-      "sudo mv /home/core/*.pem /etc/kubernetes/ssl/"
+      "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
+      "sudo chown root:root /etc/kubernetes/ssl/*.pem",
+      "sudo chmod 600 /etc/kubernetes/ssl/*.pem"
     ]
   }
 }
