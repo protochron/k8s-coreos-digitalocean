@@ -137,6 +137,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
 
         Environment=KUBELET_VERSION=${k8s_version}_coreos.0
+        Environment="RKT_OPTS=--volume=resolv,kind=host,source=/etc/hosts --mount volume=resolv,target=/etc/hosts"
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers=${apiservers} \
         --network-plugin-dir=/etc/kubernetes/cni/net.d \
