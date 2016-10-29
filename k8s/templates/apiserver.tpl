@@ -225,8 +225,10 @@ coreos:
         Type=oneshot
         Environment=DO_KEY=${key}
         Environment=DO_TAG=${tag}
-        ExecStart=/usr/bin/docker run --rm --privileged -e DO_KEY -e DO_TAG qmxme/drophosts:latest
+        ExecStartPre=-/usr/bin/docker pull qmxme/drophosts:latest
+        ExecStart=/usr/bin/docker run --rm --privileged -e DO_KEY -e DO_TAG -v /etc/hosts:/etc/hosts qmxme/drophosts:latest
     - name: drophosts.timer
+      enable: true
       command: start
       content: |
         [Unit]
