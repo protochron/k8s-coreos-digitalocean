@@ -213,6 +213,27 @@ coreos:
 
         [Timer]
         OnCalendar=*:0/5
+    - name: drophosts.service
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=updates hosts with peer droplets
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        Environment=DO_TAG=${tag}
+        ExecStart=/usr/bin/docker run --rm --privileged -e DO_KEY -e DO_TAG qmxme/drophosts:latest
+    - name: drophosts.timer
+      command: start
+      content: |
+        [Unit]
+        Description=Run drophosts.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5
     - name: "flanneld.service"
       drop-ins:
         - name: "40-ExecStartPre-symlink.conf"

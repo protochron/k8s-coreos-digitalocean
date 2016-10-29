@@ -7,6 +7,7 @@ data "template_file" "apiserver" {
     service_ip_range = "${var.service_ip_range}"
     k8s_version      = "v${var.kubernetes_version}"
     key              = "${var.do_read_token}"
+    tag              = "${var.cluster_tag}"
   }
 }
 
