@@ -87,6 +87,49 @@ coreos:
             [Service]
             Environment="DOCKER_OPTS=--storage-driver=overlay"
       command: start
+    - name: droplan.service
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=updates iptables with peer droplets
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
+    - name: droplan.timer
+      command: start
+      content: |
+        [Unit]
+        Description=Run droplan.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5
+    - name: drophosts.service
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=updates hosts with peer droplets
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        Environment=DO_TAG=${tag}
+        ExecStartPre=-/usr/bin/docker pull qmxme/drophosts:latest
+        ExecStart=/usr/bin/docker run --rm --privileged -e DO_KEY -e DO_TAG -v /etc/hosts:/etc/hosts qmxme/drophosts:latest
+    - name: drophosts.timer
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=Run drophosts.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5
     - name: "kubelet.service"
       command: start
       content: |

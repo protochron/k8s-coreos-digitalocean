@@ -21,8 +21,9 @@ data "template_file" "kubelet" {
 
     master      = "https://${digitalocean_droplet.apiserver.ipv4_address_private}:8443"
     k8s_version = "v${var.kubernetes_version}"
-    apiservers  = "${join(",", formatlist("https://%s:8443", digitalocean_droplet.apiserver.*.ipv4_address_private))}"
+    apiservers  = "${join(",", formatlist("https://%s.kubelocal:8443", digitalocean_droplet.apiserver.*.name))}"
     key         = "${var.do_read_token}"
+    tag         = "${var.cluster_tag}"
   }
 }
 
@@ -60,7 +61,7 @@ resource digitalocean_droplet "apiserver" {
   }
 
   provisioner "local-exec" {
-    command = "bin/generate_apiserver_cert ${self.name} ${self.ipv4_address_private} ${var.dns_service_ip}"
+    command = "bin/generate_apiserver_cert ${self.name} ${self.ipv4_address_private} ${var.dns_service_ip} ${self.name}.kubelocal"
   }
 
   provisioner "file" {
@@ -109,7 +110,7 @@ resource digitalocean_droplet "kubelet" {
   }
 
   provisioner "local-exec" {
-    command = "bin/generate_worker_cert ${self.name} ${self.ipv4_address_private}"
+    command = "bin/generate_worker_cert ${self.name} ${self.ipv4_address_private} ${self.name}.kubelocal"
   }
 
   provisioner "file" {

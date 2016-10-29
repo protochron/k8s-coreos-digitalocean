@@ -6,6 +6,7 @@ DIR=$(dirname $(dirname $SCRIPT))
 NODE_NAME="$1"
 IP_ADDR="$2"
 DNS_SERVICE_IP="$3"
+HOST="$4"
 
 tmpfile=$(mktemp)
 cat <<EOF > $tmpfile
@@ -22,6 +23,7 @@ DNS.1 = kubernetes
 DNS.2 = kubernetes.default
 DNS.3 = kubernetes.default.svc
 DNS.4 = kubernetes.default.svc.cluster.local
+DNS.5 = ${HOST}
 IP.1 = ${DNS_SERVICE_IP}
 IP.2 = ${IP_ADDR}
 EOF

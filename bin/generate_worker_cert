@@ -5,6 +5,7 @@ DIR=$(dirname $(dirname $SCRIPT))
 
 NODE_NAME="$1"
 IP_ADDR="$2"
+HOST="$3"
 
 tmpfile=$(mktemp)
 cat <<EOF > $tmpfile
@@ -18,6 +19,7 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 [alt_names]
 IP.1 = ${IP_ADDR}
+DNS.1 = ${HOST}
 EOF
 
 mkdir -p $DIR/ssl
