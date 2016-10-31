@@ -82,8 +82,6 @@ resource digitalocean_droplet "apiserver" {
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /etc/kubernetes/ssl",
-      "sudo cp /home/core/ca.pem /etc/ssl/certs/${var.cluster_tag}.pem",
-      "sudo update-ca-certificates",
       "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
       "sudo chown root:root /etc/kubernetes/ssl/*.pem",
       "sudo chmod 600 /etc/kubernetes/ssl/*.pem"
@@ -131,8 +129,6 @@ resource digitalocean_droplet "kubelet" {
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /etc/kubernetes/ssl",
-      "sudo cp /home/core/ca.pem /etc/ssl/certs/${var.cluster_tag}.pem",
-      "sudo update-ca-certificates",
       "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
       "sudo chown root:root /etc/kubernetes/ssl/*.pem",
       "sudo chmod 600 /etc/kubernetes/ssl/*.pem"
@@ -180,8 +176,6 @@ resource digitalocean_droplet "lb" {
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /etc/kubernetes/ssl",
-      "sudo cp /home/core/ca.pem /etc/ssl/certs/${var.cluster_tag}.pem",
-      "sudo update-ca-certificates",
       "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
       "sudo chown root:root /etc/kubernetes/ssl/*.pem",
       "sudo chmod 600 /etc/kubernetes/ssl/*.pem"
