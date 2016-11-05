@@ -70,7 +70,7 @@ resource digitalocean_droplet "apiserver" {
       "sudo mv /home/core/*.pem /etc/kubernetes/ssl/",
       "sudo chown root:root /etc/kubernetes/ssl/*.pem",
       "sudo chmod 600 /etc/kubernetes/ssl/*.pem",
-      "sudo sed -i \"s@#MASTERURL#@https://${self.name}.kubelocal:8443@\" /etc/kubernetes/addons/kube-dns/kube-dns-rc.yaml"
+      "sudo sed -i \"s@#MASTERURL#@https://${self.ipv4_address_private}:8443@\" /etc/kubernetes/addons/kube-dns/kube-dns-rc.yaml"
     ]
   }
 }
