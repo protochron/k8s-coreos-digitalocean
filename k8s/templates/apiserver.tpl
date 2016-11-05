@@ -130,20 +130,20 @@ write_files:
               port: 10252
             initialDelaySeconds: 15
             timeoutSeconds: 1
-          volumeMounts:
-          - mountPath: /etc/kubernetes/ssl
+            volumeMounts:
+            - mountPath: /etc/kubernetes/ssl
+              name: ssl-certs-kubernetes
+              readOnly: true
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs-host
+              readOnly: true
+          volumes:
+          - hostPath:
+              path: /etc/kubernetes/ssl
             name: ssl-certs-kubernetes
-            readOnly: true
-          - mountPath: /etc/ssl/certs
+          - hostPath:
+              path: /usr/share/ca-certificates
             name: ssl-certs-host
-            readOnly: true
-        volumes:
-        - hostPath:
-            path: /etc/kubernetes/ssl
-          name: ssl-certs-kubernetes
-        - hostPath:
-            path: /usr/share/ca-certificates
-          name: ssl-certs-host
   - path: '/etc/kubernetes/manifests/kube-scheduler.yaml'
     owner: root
     permissions: 0644
@@ -279,6 +279,8 @@ write_files:
               args:
               - --domain=cluster.local.
               - --dns-port=10053
+              - --kube-master-url=#MASTERURL#
+              - --kubecfg-file=/etc/kubernetes/worker-kubeconfig.yml
               ports:
               - containerPort: 10053
                 name: dns-local
@@ -286,6 +288,16 @@ write_files:
               - containerPort: 10053
                 name: dns-tcp-local
                 protocol: TCP
+              volumeMounts:
+              - mountPath: /etc/kubernetes/ssl
+                name: ssl-certs-kubernetes
+                readOnly: true
+              - mountPath: /etc/ssl/certs
+                name: ssl-certs-host
+                readOnly: true
+              - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+                name: "kubeconfig"
+                readOnly: true
             - name: dnsmasq
               image: gcr.io/google_containers/kube-dnsmasq-amd64:1.4
               livenessProbe:
@@ -328,6 +340,16 @@ write_files:
               - containerPort: 8080
                 protocol: TCP
             dnsPolicy: Default
+            volumes:
+            - hostPath:
+                path: /etc/kubernetes/ssl
+              name: ssl-certs-kubernetes
+            - hostPath:
+                path: /usr/share/ca-certificates
+              name: ssl-certs-host
+            - hostPath:
+                path: "/etc/kubernetes/worker-kubeconfig.yaml"
+              name: "kubeconfig"
 
 #######################
 coreos:
@@ -351,27 +373,6 @@ coreos:
         ExecStart=/usr/bin/curl -sL -o /opt/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${k8s_version}/bin/linux/amd64/kubectl
         ExecStartPost=/usr/bin/chmod a+x /opt/bin/kubectl
         RemainAfterExit=yes
-    - name: droplan.service
-      enable: true
-      command: start
-      content: |
-        [Unit]
-        Description=updates iptables with peer droplets
-        Requires=docker.service
-
-        [Service]
-        Type=oneshot
-        Environment=DO_KEY=${key}
-        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
-    - name: droplan.timer
-      enable: true
-      command: start
-      content: |
-        [Unit]
-        Description=Run droplan.service every 5 minutes
-
-        [Timer]
-        OnCalendar=*:0/5
     - name: drophosts.service
       enable: true
       command: start
@@ -394,7 +395,7 @@ coreos:
         Description=Run drophosts.service every 5 minutes
 
         [Timer]
-        OnCalendar=*:0/5
+        OnCalendar=*:0/2
     - name: "flanneld.service"
       drop-ins:
         - name: "40-ExecStartPre-symlink.conf"
@@ -435,3 +436,24 @@ coreos:
         RestartSec=10
         [Install]
         WantedBy=multi-user.target
+    - name: droplan.service
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=updates iptables with peer droplets
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
+    - name: droplan.timer
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=Run droplan.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5

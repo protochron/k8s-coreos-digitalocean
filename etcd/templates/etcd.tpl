@@ -18,7 +18,6 @@ coreos:
             Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
     - name: droplan.service
       enable: true
-      command: start
       content: |
         [Unit]
         Description=updates iptables with peer droplets

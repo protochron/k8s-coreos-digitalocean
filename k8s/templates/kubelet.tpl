@@ -44,6 +44,7 @@ write_files:
           - proxy
           - --master=${master}
           - --proxy-mode=iptables
+          - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
           securityContext:
             privileged: true
           volumeMounts:
@@ -52,6 +53,9 @@ write_files:
             - mountPath: /etc/kubernetes/ssl
               name: "etc-kube-ssl"
               readOnly: true
+            - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+              name: "kubeconfig"
+              readOnly: true
         volumes:
           - name: "ssl-certs"
             hostPath:
@@ -59,6 +63,9 @@ write_files:
           - name: "etc-kube-ssl"
             hostPath:
               path: "/etc/kubernetes/ssl"
+          - name: "kubeconfig"
+            hostPath:
+              path: "/etc/kubernetes/worker-kubeconfig.yaml"
   - path: '/etc/kubernetes/worker-kubeconfig.yaml'
     owner: root
     permissions: 0644
@@ -89,46 +96,6 @@ coreos:
     - name: iptables-restore.service
       enable: true
       command: start
-    - name: "flanneld.service"
-      drop-ins:
-        - name: "40-ExecStartPre-symlink.conf"
-          content: |
-            [Service]
-            ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
-      command: start
-    - name: "docker.service"
-      drop-ins:
-        - name: "50-require-flannel.conf"
-          content: |
-            [Unit]
-            Requires=flanneld.service
-            After=flanneld.service
-        - name: "60-docker-config.conf"
-          content: |
-            [Service]
-            Environment="DOCKER_OPTS=--storage-driver=overlay"
-      command: start
-    - name: droplan.service
-      enable: true
-      command: start
-      content: |
-        [Unit]
-        Description=updates iptables with peer droplets
-        Requires=docker.service
-
-        [Service]
-        Type=oneshot
-        Environment=DO_KEY=${key}
-        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
-    - name: droplan.timer
-      enable: true
-      command: start
-      content: |
-        [Unit]
-        Description=Run droplan.service every 5 minutes
-
-        [Timer]
-        OnCalendar=*:0/5
     - name: drophosts.service
       enable: true
       command: start
@@ -151,7 +118,26 @@ coreos:
         Description=Run drophosts.service every 5 minutes
 
         [Timer]
-        OnCalendar=*:0/5
+        OnCalendar=*:0/2
+    - name: "flanneld.service"
+      drop-ins:
+        - name: "40-ExecStartPre-symlink.conf"
+          content: |
+            [Service]
+            ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
+      command: start
+    - name: "docker.service"
+      drop-ins:
+        - name: "50-require-flannel.conf"
+          content: |
+            [Unit]
+            Requires=flanneld.service
+            After=flanneld.service
+        - name: "60-docker-config.conf"
+          content: |
+            [Service]
+            Environment="DOCKER_OPTS=--storage-driver=overlay"
+      command: start
     - name: "kubelet.service"
       command: start
       content: |
@@ -176,3 +162,23 @@ coreos:
         RestartSec=10
         [Install]
         WantedBy=multi-user.target
+    - name: droplan.service
+      enable: true
+      content: |
+        [Unit]
+        Description=updates iptables with peer droplets
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
+    - name: droplan.timer
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=Run droplan.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5
