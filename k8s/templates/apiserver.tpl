@@ -130,20 +130,20 @@ write_files:
               port: 10252
             initialDelaySeconds: 15
             timeoutSeconds: 1
-            volumeMounts:
-            - mountPath: /etc/kubernetes/ssl
-              name: ssl-certs-kubernetes
-              readOnly: true
-            - mountPath: /etc/ssl/certs
-              name: ssl-certs-host
-              readOnly: true
-          volumes:
-          - hostPath:
-              path: /etc/kubernetes/ssl
+          volumeMounts:
+          - mountPath: /etc/kubernetes/ssl
             name: ssl-certs-kubernetes
-          - hostPath:
-              path: /usr/share/ca-certificates
+            readOnly: true
+          - mountPath: /etc/ssl/certs
             name: ssl-certs-host
+            readOnly: true
+        volumes:
+        - hostPath:
+            path: /etc/kubernetes/ssl
+          name: ssl-certs-kubernetes
+        - hostPath:
+            path: /usr/share/ca-certificates
+          name: ssl-certs-host
   - path: '/etc/kubernetes/manifests/kube-scheduler.yaml'
     owner: root
     permissions: 0644
@@ -280,7 +280,7 @@ write_files:
               - --domain=cluster.local.
               - --dns-port=10053
               - --kube-master-url=#MASTERURL#
-              - --kubecfg-file=/etc/kubernetes/worker-kubeconfig.yml
+              - --kubecfg-file=/etc/kubernetes/worker-kubeconfig.yaml
               ports:
               - containerPort: 10053
                 name: dns-local
