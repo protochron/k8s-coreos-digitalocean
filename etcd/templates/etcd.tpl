@@ -17,7 +17,7 @@ coreos:
             [Service]
             Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
     - name: droplan.service
-      command: start
+      enable: true
       content: |
         [Unit]
         Description=updates iptables with peer droplets
@@ -28,6 +28,7 @@ coreos:
         Environment=DO_KEY=${key}
         ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
     - name: droplan.timer
+      enable: true
       command: start
       content: |
         [Unit]

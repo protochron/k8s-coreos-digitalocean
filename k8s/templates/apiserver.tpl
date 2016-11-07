@@ -45,11 +45,13 @@ write_files:
             - --etcd-servers=${etcd_servers}
             - --allow-privileged=true
             - --bind-address=0.0.0.0
-            - --insecure-bind-address=0.0.0.0
             - --service-cluster-ip-range=${service_ip_range}
-            - --secure-port=443
+            - --secure-port=8443
             - --advertise-address=$private_ipv4
-            - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
+            - --admission-control=NamespaceLifecycle,ServiceAccount,LimitRanger,DefaultStorageClass,ResourceQuota
+            - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
+            - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+            - --client-ca-file=/etc/kubernetes/ssl/ca.pem
             - --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true
             ports:
             - containerPort: 443
@@ -67,10 +69,10 @@ write_files:
               readOnly: true
         volumes:
         - hostPath:
-          path: /etc/kubernetes/ssl
+            path: /etc/kubernetes/ssl
           name: ssl-certs-kubernetes
         - hostPath:
-          path: /usr/share/ca-certificates
+            path: /usr/share/ca-certificates
           name: ssl-certs-host
   - path: '/etc/kubernetes/manifests/kube-proxy.yaml'
     owner: root
@@ -120,8 +122,7 @@ write_files:
           - controller-manager
           - --master=http://127.0.0.1:8080
           - --leader-elect=true
-            #- --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-            #- --root-ca-file=/etc/kubernetes/ssl/ca.pem
+          - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           livenessProbe:
             httpGet:
               host: 127.0.0.1
@@ -169,6 +170,186 @@ write_files:
               port: 10251
             initialDelaySeconds: 15
             timeoutSeconds: 1
+  - path: "/etc/kubernetes/manifests/addons.yaml"
+    owner: root
+    permissions: 0644
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-addon-manager
+        namespace: kube-system
+        labels:
+          component: kube-addon-manager
+          version: v4
+      spec:
+        hostNetwork: true
+        containers:
+        - name: kube-addon-manager
+          # When updating version also bump it in cluster/images/hyperkube/static-pods/addon-manager.json
+          image: gcr.io/google-containers/kube-addon-manager:v5.1
+          resources:
+            requests:
+              cpu: 5m
+              memory: 50Mi
+          volumeMounts:
+          - mountPath: /etc/kubernetes/
+            name: addons
+            readOnly: true
+        volumes:
+        - hostPath:
+            path: /etc/kubernetes/
+          name: addons
+  - path: "/etc/kubernetes/addons/kube-dns/kube-dns-svc.yaml"
+    owner: root
+    permissions: 0644
+    content: |
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: kube-dns
+        namespace: kube-system
+        labels:
+          k8s-app: kube-dns
+          kubernetes.io/cluster-service: "true"
+          kubernetes.io/name: "KubeDNS"
+      spec:
+        selector:
+          k8s-app: kube-dns
+        clusterIP: 10.3.0.10
+        ports:
+        - name: dns
+          port: 53
+          protocol: UDP
+        - name: dns-tcp
+          port: 53
+          protocol: TCP
+  - path: "/etc/kubernetes/addons/kube-dns/kube-dns-rc.yaml"
+    owner: root
+    permissions: 0644
+    content: |
+      apiVersion: v1
+      kind: ReplicationController
+      metadata:
+        name: kube-dns-v20
+        namespace: kube-system
+        labels:
+          k8s-app: kube-dns
+          version: v20
+          kubernetes.io/cluster-service: "true"
+      spec:
+        replicas: 1
+        selector:
+          k8s-app: kube-dns
+          version: v20
+        template:
+          metadata:
+            labels:
+              k8s-app: kube-dns
+              version: v20
+            annotations:
+              scheduler.alpha.kubernetes.io/critical-pod: ''
+              scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+          spec:
+            containers:
+            - name: kubedns
+              image: gcr.io/google_containers/kubedns-amd64:1.8
+              resources:
+                limits:
+                  memory: 170Mi
+                requests:
+                  cpu: 100m
+                  memory: 70Mi
+              livenessProbe:
+                httpGet:
+                  path: /healthz-kubedns
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 60
+                timeoutSeconds: 5
+                successThreshold: 1
+                failureThreshold: 5
+              readinessProbe:
+                httpGet:
+                  path: /readiness
+                  port: 8081
+                  scheme: HTTP
+                initialDelaySeconds: 3
+                timeoutSeconds: 5
+              args:
+              - --domain=cluster.local.
+              - --dns-port=10053
+              - --kube-master-url=#MASTERURL#
+              - --kubecfg-file=/etc/kubernetes/worker-kubeconfig.yaml
+              ports:
+              - containerPort: 10053
+                name: dns-local
+                protocol: UDP
+              - containerPort: 10053
+                name: dns-tcp-local
+                protocol: TCP
+              volumeMounts:
+              - mountPath: /etc/kubernetes/ssl
+                name: ssl-certs-kubernetes
+                readOnly: true
+              - mountPath: /etc/ssl/certs
+                name: ssl-certs-host
+                readOnly: true
+              - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+                name: "kubeconfig"
+                readOnly: true
+            - name: dnsmasq
+              image: gcr.io/google_containers/kube-dnsmasq-amd64:1.4
+              livenessProbe:
+                httpGet:
+                  path: /healthz-dnsmasq
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 60
+                timeoutSeconds: 5
+                successThreshold: 1
+                failureThreshold: 5
+              args:
+              - --cache-size=1000
+              - --no-resolv
+              - --server=127.0.0.1#10053
+              - --log-facility=-
+              ports:
+              - containerPort: 53
+                name: dns
+                protocol: UDP
+              - containerPort: 53
+                name: dns-tcp
+                protocol: TCP
+            - name: healthz
+              image: gcr.io/google_containers/exechealthz-amd64:1.2
+              resources:
+                limits:
+                  memory: 50Mi
+                requests:
+                  cpu: 10m
+                  memory: 50Mi
+              args:
+              - --cmd=nslookup kubernetes.default.svc.cluster.local 127.0.0.1 >/dev/null
+              - --url=/healthz-dnsmasq
+              - --cmd=nslookup kubernetes.default.svc.cluster.local 127.0.0.1:10053 >/dev/null
+              - --url=/healthz-kubedns
+              - --port=8080
+              - --quiet
+              ports:
+              - containerPort: 8080
+                protocol: TCP
+            dnsPolicy: Default
+            volumes:
+            - hostPath:
+                path: /etc/kubernetes/ssl
+              name: ssl-certs-kubernetes
+            - hostPath:
+                path: /usr/share/ca-certificates
+              name: ssl-certs-host
+            - hostPath:
+                path: "/etc/kubernetes/worker-kubeconfig.yaml"
+              name: "kubeconfig"
 
 #######################
 coreos:
@@ -192,25 +373,29 @@ coreos:
         ExecStart=/usr/bin/curl -sL -o /opt/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${k8s_version}/bin/linux/amd64/kubectl
         ExecStartPost=/usr/bin/chmod a+x /opt/bin/kubectl
         RemainAfterExit=yes
-    - name: droplan.service
+    - name: drophosts.service
+      enable: true
       command: start
       content: |
         [Unit]
-        Description=updates iptables with peer droplets
+        Description=updates hosts with peer droplets
         Requires=docker.service
 
         [Service]
         Type=oneshot
         Environment=DO_KEY=${key}
-        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
-    - name: droplan.timer
+        Environment=DO_TAG=${tag}
+        ExecStartPre=-/usr/bin/docker pull qmxme/drophosts:latest
+        ExecStart=/usr/bin/docker run --rm --privileged -e DO_KEY -e DO_TAG -v /etc/hosts:/etc/hosts qmxme/drophosts:latest
+    - name: drophosts.timer
+      enable: true
       command: start
       content: |
         [Unit]
-        Description=Run droplan.service every 5 minutes
+        Description=Run drophosts.service every 5 minutes
 
         [Timer]
-        OnCalendar=*:0/5
+        OnCalendar=*:0/2
     - name: "flanneld.service"
       drop-ins:
         - name: "40-ExecStartPre-symlink.conf"
@@ -231,6 +416,7 @@ coreos:
             Environment="DOCKER_OPTS=--storage-driver=overlay --iptables=false"
       command: start
     - name: "kubelet.service"
+      enable: true
       command: start
       content: |
         [Service]
@@ -250,3 +436,24 @@ coreos:
         RestartSec=10
         [Install]
         WantedBy=multi-user.target
+    - name: droplan.service
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=updates iptables with peer droplets
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        Environment=DO_KEY=${key}
+        ExecStart=/usr/bin/docker run --rm --net=host --cap-add=NET_ADMIN -e DO_KEY tam7t/droplan:latest
+    - name: droplan.timer
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Description=Run droplan.service every 5 minutes
+
+        [Timer]
+        OnCalendar=*:0/5

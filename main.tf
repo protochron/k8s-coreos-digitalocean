@@ -66,3 +66,9 @@ resource null_resource "flannel" {
     ]
   }
 }
+
+resource null_resource "ca" {
+  provisioner "local-exec" {
+    command = "bin/create_CA"
+  }
+}
