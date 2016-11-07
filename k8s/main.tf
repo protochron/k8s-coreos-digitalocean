@@ -27,6 +27,22 @@ data "template_file" "kubelet" {
   }
 }
 
+data "template_file" "lb" {
+  template = "${file("${path.module}/templates/lb.tpl")}"
+
+  vars {
+    etcd_servers     = "${var.etcd_server_urls}"
+    dns_service_ip   = "${var.dns_service_ip}"
+    service_ip_range = "${var.service_ip_range}"
+
+    master      = "https://${digitalocean_droplet.apiserver.ipv4_address_private}:8443"
+    k8s_version = "v${var.kubernetes_version}"
+    apiservers  = "${join(",", formatlist("https://%s.kubelocal:8443", digitalocean_droplet.apiserver.*.name))}"
+    key         = "${var.do_read_token}"
+    tag         = "${var.cluster_tag}"
+  }
+}
+
 resource digitalocean_droplet "apiserver" {
   count              = "${var.apiserver_count}"
   image              = "${var.image}"
@@ -125,14 +141,14 @@ resource digitalocean_droplet "kubelet" {
 resource digitalocean_droplet "lb" {
   count              = "${var.lb_count}"
   image              = "${var.image}"
-  size               = "${var.lb_size}"
   region             = "${var.region}"
+  size               = "${var.lb_size}"
   name               = "${format("%slb-%02d-%s", var.resource_prefix, count.index + 1, var.cluster_id)}"
   ssh_keys           = ["${split(",", var.ssh_keys)}"]
   tags               = ["${var.cluster_tag}"]
   private_networking = true
 
-  user_data = "${data.template_file.kubelet.rendered}"
+  user_data = "${data.template_file.lb.rendered}"
 
   connection = {
     timeout = "30s"
@@ -141,7 +157,7 @@ resource digitalocean_droplet "lb" {
   }
 
   provisioner "local-exec" {
-    command = "bin/generate_worker_cert ${self.name} ${self.ipv4_address_private}"
+    command = "bin/generate_worker_cert ${self.name} ${self.ipv4_address_private} ${self.name}.kubelocal"
   }
 
   provisioner "file" {
