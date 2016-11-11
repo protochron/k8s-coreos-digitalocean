@@ -134,7 +134,7 @@ coreos:
         --cluster-dns=${dns_service_ip} \
         --cluster-domain=cluster.local \
         --node-labels="role=edge-router" \
-        --register-schedulable=false \
+        --register-schedulable=true \
         --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
         --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
         --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
