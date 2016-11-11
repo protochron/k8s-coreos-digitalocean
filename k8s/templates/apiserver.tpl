@@ -123,6 +123,7 @@ write_files:
           - --master=http://127.0.0.1:8080
           - --leader-elect=true
           - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           livenessProbe:
             httpGet:
               host: 127.0.0.1
