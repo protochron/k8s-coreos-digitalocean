@@ -6,7 +6,8 @@ DIR=$(dirname $(dirname $SCRIPT))
 NODE_NAME="$1"
 IP_ADDR="$2"
 DNS_SERVICE_IP="$3"
-HOST="$4"
+APISERVER_SERVICE_IP="$4"
+HOST="$5"
 
 tmpfile=$(mktemp)
 cat <<EOF > $tmpfile
@@ -26,6 +27,7 @@ DNS.4 = kubernetes.default.svc.cluster.local
 DNS.5 = ${HOST}
 IP.1 = ${DNS_SERVICE_IP}
 IP.2 = ${IP_ADDR}
+IP.3 = ${APISERVER_SERVICE_IP}
 EOF
 
 mkdir -p $DIR/ssl
