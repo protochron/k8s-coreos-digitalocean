@@ -133,7 +133,7 @@ coreos:
         --hostname-override=$private_ipv4 \
         --cluster-dns=${dns_service_ip} \
         --cluster-domain=cluster.local \
-        --node-labels=edge-router \
+        --node-labels="role=edge-router" \
         --register-schedulable=false \
         --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
         --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
