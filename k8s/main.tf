@@ -62,7 +62,7 @@ resource digitalocean_droplet "apiserver" {
   }
 
   provisioner "local-exec" {
-    command = "bin/generate_apiserver_cert ${self.name} ${self.ipv4_address_private} ${var.dns_service_ip} ${self.name}.kubelocal"
+    command = "bin/generate_apiserver_cert ${self.name} ${self.ipv4_address_private} ${var.dns_service_ip} ${var.k8s_service_ip} ${self.name}.kubelocal"
   }
 
   provisioner "file" {
